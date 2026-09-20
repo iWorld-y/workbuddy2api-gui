@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard'
 import StatsPage from './pages/StatsPage'
 import Models from './pages/Models'
 import Credits from './pages/Credits'
+import LogsPage from './pages/LogsPage'
 import Accounts from './pages/Accounts'
 import LoginWizard from './pages/LoginWizard'
 import Playground from './pages/Playground'
@@ -21,6 +22,7 @@ const NAV = [
   { to: '/stats', label: '请求统计', icon: '📈' },
   { to: '/models', label: '模型与倍率', icon: '🧮' },
   { to: '/credits', label: '积分到期', icon: '💎' },
+  { to: '/logs', label: '请求日志', icon: '🧾' },
   { to: '/login', label: '添加账号', icon: '➕' },
   { to: '/playground', label: '聊天测试', icon: '💬' },
   { to: '/config', label: '网关配置', icon: '⚙️' },
@@ -149,6 +151,7 @@ function Shell({
           <Route path="/stats" element={<StatsPage session={session} />} />
           <Route path="/models" element={<Models />} />
           <Route path="/credits" element={<Credits />} />
+          <Route path="/logs" element={<LogsPage session={session} />} />
           <Route path="/login" element={<LoginWizard session={session} onDone={onSessionRefresh} />} />
           <Route path="/playground" element={<Playground />} />
           <Route path="/config" element={<ConfigPage session={session} />} />
