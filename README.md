@@ -103,6 +103,9 @@ vi config.json            # 改 auth_dir / config_file / ui.password
 
 > 前端未构建也能编译运行：此时后端照常工作，页面会显示"前端未构建"的引导提示。
 
+> 需要 **Go 1.27+**（`go.mod` 声明 `go 1.27`）。工具链更旧时，默认的 `GOTOOLCHAIN=auto`
+> 会自动下载对应版本；离线环境请先自行升级。容器构建固定用 `golang:1.27-alpine`。
+
 ## ⚙️ 配置说明
 
 完整字段见 [`config.example.json`](config.example.json)。
