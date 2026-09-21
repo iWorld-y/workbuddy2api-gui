@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark light" />
     <title>WorkBuddy 网关控制台</title>
+    <script>
+      // 首帧之前定主题。必须在样式表之前执行：若交给 React 初始化，首帧一定先按 :root
+      // 的深色渲染，浅色系统用户每次加载都会看到一次深→浅闪变。
+      // 判定顺序与 src/theme.ts 一致：显式选择 → 系统偏好 → 深色。
+      (function () {
+        var t = 'dark'
+        try {
+          var saved = localStorage.getItem('wbgui-theme')
+          if (saved === 'light' || saved === 'dark') {
+            t = saved
+          } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            t = 'light'
+          }
+        } catch (e) {
+          // 隐私模式下 localStorage 不可读：退回深色，不影响后续手动切换。
+        }
+        document.documentElement.setAttribute('data-theme', t)
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
