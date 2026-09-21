@@ -4,6 +4,14 @@ import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { api, setUnauthorizedHandler } from './api'
 import type { SessionInfo } from './types'
 import { Alert, Spinner } from './ui'
+import {
+  applyTheme,
+  readStoredTheme,
+  resolveTheme,
+  storeTheme,
+  watchSystemTheme,
+  type Theme,
+} from './theme'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import StatsPage from './pages/StatsPage'
@@ -29,6 +37,7 @@ export default function App() {
   const [session, setSession] = useState<SessionInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [banner, setBanner] = useState<string | null>(null)
+  const [theme, setTheme] = useState<Theme>(() => resolveTheme())
   const navigate = useNavigate()
 
   const refreshSession = useCallback(async () => {
@@ -63,6 +72,23 @@ export default function App() {
     setSession((s) => (s ? { ...s, authenticated: false, username: '' } : s))
   }, [])
 
+  // 主题落到根元素。index.html 的内联脚本已在首帧前设过一次，这里负责后续切换。
+  useEffect(() => {
+    applyTheme(theme)
+  }, [theme])
+
+  // 未显式选择时跟随系统主题变化；已选择后系统变化不再影响当前主题。依赖 theme 是为了
+  // 在用户做出（或清除）选择后重新评估「是否仍然跟随」。
+  useEffect(() => {
+    if (readStoredTheme()) return
+    return watchSystemTheme(setTheme)
+  }, [theme])
+
+  const chooseTheme = useCallback((next: Theme) => {
+    storeTheme(next)
+    setTheme(next)
+  }, [])
+
   if (loading) {
     return (
       <div className="login-wrap">
@@ -76,16 +102,26 @@ export default function App() {
   }
 
   return (
-    <Shell session={session} onLogout={handleLoggedOut} onSessionRefresh={refreshSession} />
+    <Shell
+      session={session}
+      theme={theme}
+      onChooseTheme={chooseTheme}
+      onLogout={handleLoggedOut}
+      onSessionRefresh={refreshSession}
+    />
   )
 }
 
 function Shell({
   session,
+  theme,
+  onChooseTheme,
   onLogout,
   onSessionRefresh,
 }: {
   session: SessionInfo
+  theme: Theme
+  onChooseTheme: (t: Theme) => void
   onLogout: () => void
   onSessionRefresh: () => Promise<SessionInfo | null>
 }) {
@@ -129,9 +165,18 @@ function Shell({
             {session.username}
             {session.read_only && <span className="badge badge-warn" style={{ marginLeft: 6 }}>只读</span>}
           </div>
-          <button className="btn btn-sm" style={{ width: '100%' }} onClick={onLogout}>
-            退出登录
-          </button>
+          <div style={{ display: 'grid', gap: 6 }}>
+            <button
+              className="btn btn-sm"
+              style={{ width: '100%' }}
+              onClick={() => onChooseTheme(theme === 'light' ? 'dark' : 'light')}
+            >
+              {theme === 'light' ? '🌙 切换到深色' : '☀️ 切换到浅色'}
+            </button>
+            <button className="btn btn-sm" style={{ width: '100%' }} onClick={onLogout}>
+              退出登录
+            </button>
+          </div>
         </div>
       </aside>
 
