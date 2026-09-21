@@ -16,7 +16,7 @@ COPY internal/webui/dist ./internal/webui/dist
 RUN cd web && npm run build
 
 # ── 阶段 2：编译 Go 后端（含前端产物 embed）────────────────────
-FROM golang:1.23-alpine AS build
+FROM golang:1.27-alpine AS build
 ARG VERSION=dev
 WORKDIR /src
 COPY go.mod ./
