@@ -11,7 +11,10 @@ wbgui
 # 前端依赖与构建产物（构建产物由 Dockerfile 生成，不入库）
 web/node_modules/
 web/dist/
-internal/webui/dist/assets/
+# dist 整体不入库，只留 .gitkeep 作为 go:embed 的锚点：仓库里没有真实产物时
+# go build 仍可用，且 webui 会回落到「前端未构建」提示页而不是白屏。
+internal/webui/dist/*
+!internal/webui/dist/.gitkeep
 
 # 编辑器 / 系统
 .DS_Store

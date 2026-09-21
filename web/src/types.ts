@@ -376,3 +376,40 @@ export interface StatsResponse {
   unpriced: string[] | null
   pricing: PricingTable
 }
+
+/** 单次请求的 token 与缓存三段计数（整个 usage 为 null = 上游未回 usage）。 */
+export interface RequestUsage {
+  prompt_tokens: number
+  completion_tokens: number
+  cache_hit_tokens: number
+  cache_miss_tokens: number
+  cache_write_tokens: number
+}
+
+/** 单次 chat 请求的观测明细（网关 /v1/logs 的 records[]）。 */
+export interface RequestLog {
+  seq: number
+  time: string
+  model: string
+  mode: 'stream' | 'sync'
+  /** 账号 uid 前 8 位（完整 uid 不出网关） */
+  uid8: string
+  nick?: string
+  status: number
+  /** 首字延迟（毫秒）；null = 无首帧观测（非流式请求） */
+  ttfb_ms: number | null
+  total_ms: number
+  usage: RequestUsage | null
+  /** 本次真实扣费；null = 未观测 */
+  credit: number | null
+}
+
+/** /api/logs 响应。 */
+export interface LogsResponse {
+  records: RequestLog[]
+  count: number
+  /** 下一页游标（传回 before=）；0 = 已到末页 */
+  next_before: number
+  /** 网关明细保留天数；0 = 网关未启用明细 */
+  retention_days: number
+}

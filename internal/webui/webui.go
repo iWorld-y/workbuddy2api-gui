@@ -1,4 +1,4 @@
-// Package webui 把前端构建产物（web/dist）以 embed 方式打包进二进制。
+// Package webui 把前端构建产物（internal/webui/dist）以 embed 方式打包进二进制。
 //
 // 为什么用 embed 而不是依赖外部目录：GUI 要作为单文件/单容器交付，
 // 产物里没有 Node 运行时也不影响运行。
@@ -12,7 +12,8 @@ import (
 	"strings"
 )
 
-// distFS 前端构建产物。构建前 dist 下只有占位文件，保证 go build 永远可用。
+// distFS 前端构建产物。仓库里 dist 只有 .gitkeep 占位（产物不入库），
+// 保证 go build 永远可用；未构建时 index.html 读不到，Handler 返回提示页。
 //
 //go:embed all:dist
 var distFS embed.FS

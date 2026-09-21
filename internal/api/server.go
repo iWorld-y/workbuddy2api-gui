@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -80,6 +81,8 @@ func (s *Server) Handler() http.Handler {
 	// ── 请求统计（按模型聚合，数据源为网关 /v1/stats）─────
 	mux.HandleFunc("GET /api/stats", s.handleStats)
 	mux.HandleFunc("POST /api/stats/reset", s.handleStatsReset)
+	// ── 请求明细（逐请求 token/首字/耗时，数据源为网关 /v1/logs）──
+	mux.HandleFunc("GET /api/logs", s.handleLogs)
 	// 官方价格表编辑（统计页换算用）
 	mux.HandleFunc("PUT /api/pricing", s.handlePricingUpdate)
 	mux.HandleFunc("DELETE /api/pricing/{model}", s.handlePricingDelete)
@@ -452,6 +455,34 @@ func (s *Server) handleStatsReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "message": "网关统计已重置"})
+}
+
+// handleLogs 透传网关 /v1/logs（逐请求明细，倒序分页）。
+// 参数原样透传：limit / before / model / only / since / until。
+func (s *Server) handleLogs(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	opt := gateway.LogsOptions{
+		Model: q.Get("model"),
+		Only:  q.Get("only"),
+		Since: q.Get("since"),
+		Until: q.Get("until"),
+	}
+	if v := q.Get("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			opt.Limit = n
+		}
+	}
+	if v := q.Get("before"); v != "" {
+		if n, err := strconv.ParseInt(v, 10, 64); err == nil {
+			opt.Before = n
+		}
+	}
+	res, err := s.svc.Gateway().Logs(r.Context(), opt)
+	if err != nil {
+		writeError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, res)
 }
 
 // handlePricingUpdate 更新/新增单个模型的官方单价。

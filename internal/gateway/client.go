@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -507,4 +508,99 @@ func (c *Client) ResetStats(ctx context.Context) error {
 		return fmt.Errorf("重置统计失败（HTTP %d）: %s", resp.StatusCode, truncate(string(raw), 200))
 	}
 	return nil
+}
+
+// ---------------------------------------------------------------------------
+// 请求明细（/v1/logs）
+// ---------------------------------------------------------------------------
+
+// LogUsage 单次请求的 token 与缓存三段计数。
+type LogUsage struct {
+	PromptTokens     int64 `json:"prompt_tokens"`
+	CompletionTokens int64 `json:"completion_tokens"`
+	CacheHitTokens   int64 `json:"cache_hit_tokens"`
+	CacheMissTokens  int64 `json:"cache_miss_tokens"`
+	CacheWriteTokens int64 `json:"cache_write_tokens"`
+}
+
+// LogRecord 单次 chat 请求的观测明细（网关 /v1/logs 的 records[]）。
+//
+// TTFBMS/Credit/Usage 为可空：缺失观测与显式 0 语义不同（与网关 metrics 同口径），
+// 故用指针区分，前端按 null 渲染为 "-"。
+type LogRecord struct {
+	Seq     int64     `json:"seq"`
+	Time    time.Time `json:"time"`
+	Model   string    `json:"model"`
+	Mode    string    `json:"mode"` // stream | sync
+	UID8    string    `json:"uid8"`
+	Nick    string    `json:"nick,omitempty"`
+	Status  int       `json:"status"`
+	TTFBMS  *int64    `json:"ttfb_ms"`
+	TotalMS int64     `json:"total_ms"`
+	Usage   *LogUsage `json:"usage"`
+	Credit  *float64  `json:"credit"`
+}
+
+// LogsResult 网关 /v1/logs 响应。
+type LogsResult struct {
+	Records    []LogRecord `json:"records"`
+	Count      int         `json:"count"`
+	NextBefore int64       `json:"next_before"`
+	// RetentionDays 网关明细保留天数（0 = 网关未启用明细）。
+	RetentionDays int `json:"retention_days"`
+}
+
+// LogsOptions /v1/logs 查询参数。
+type LogsOptions struct {
+	Limit  int
+	Before int64
+	Model  string
+	Only   string // success | failed | 空（全部）
+	Since  string // RFC3339
+	Until  string // RFC3339
+}
+
+// Logs 拉取逐请求明细（倒序分页）。
+func (c *Client) Logs(ctx context.Context, opt LogsOptions) (*LogsResult, error) {
+	q := url.Values{}
+	if opt.Limit > 0 {
+		q.Set("limit", strconv.Itoa(opt.Limit))
+	}
+	if opt.Before > 0 {
+		q.Set("before", strconv.FormatInt(opt.Before, 10))
+	}
+	if opt.Model != "" {
+		q.Set("model", opt.Model)
+	}
+	if opt.Only != "" {
+		q.Set("only", opt.Only)
+	}
+	if opt.Since != "" {
+		q.Set("since", opt.Since)
+	}
+	if opt.Until != "" {
+		q.Set("until", opt.Until)
+	}
+	path := "/v1/logs"
+	if enc := q.Encode(); enc != "" {
+		path += "?" + enc
+	}
+
+	resp, err := c.do(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(io.LimitReader(resp.Body, 16<<20))
+	if resp.StatusCode == http.StatusUnauthorized {
+		return nil, fmt.Errorf("网关拒绝鉴权（401）：请检查 api_key 是否正确")
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("网关 /v1/logs 返回 HTTP %d: %s", resp.StatusCode, truncate(string(raw), 200))
+	}
+	var out LogsResult
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, fmt.Errorf("解析请求明细失败: %w", err)
+	}
+	return &out, nil
 }
