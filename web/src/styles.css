@@ -1,25 +1,202 @@
-/* 全局样式：深色为主、单文件、无 UI 框架依赖，保证产物小且可控。 */
+/* 全局样式：深色为主、单文件、无 UI 框架依赖，保证产物小且可控。
+ *
+ * 颜色一律走 :root 的语义 token，规则区不得出现颜色字面量；唯一例外是覆盖在
+ * 品牌渐变或实色填充之上的白字（下方标了「主题无关」），它们的可读性取决于所
+ * 覆盖的填充色而非页面底色，两套主题通用。
+ *
+ * token 命名：--<色相>-tint 是半透明底，--<色相>-tint-border 是其描边，
+ * --<色相>-on-tint 是压在该底上的前景。深色下前景比基色更亮，浅色主题必须反过来
+ * 更暗，所以前景不能由基色推导，必须是独立 token。 */
 
 :root {
+  /* ── 基色 ─────────────────────────────────────────── */
   --bg: #0f1117;
   --bg-elev: #171a23;
   --bg-elev2: #1d212c;
+  --bg-sunken: #12151d; /* 卡片之下的凹陷面：输入框、聊天记录、代码块 */
+  --bg-hover: #252a37; /* 交互面悬停底 */
   --border: #262b38;
   --border-soft: #20242f;
+  --border-hover: #333a4a; /* 悬停时的描边 */
+  --row-hover: rgba(255, 255, 255, 0.017); /* 表格行悬停覆盖：两套主题方向相反 */
+  --placeholder: #545b6b;
+  --spinner-track: rgba(255, 255, 255, 0.22); /* 加载轨道：两套主题方向相反 */
   --text: #e6e8ee;
   --text-dim: #98a0b3;
   --text-faint: #6b7383;
 
-  --accent: #4f8cff;
+  /* ── 状态基色 ─────────────────────────────────────── */
+  --accent: #4f8cff; /* 仅装饰：品牌渐变、趋势图线、进度条、光标 */
+  --accent-strong: #4f8cff; /* 需可辨：文字、焦点边框、实色填充按钮（浅色下变深） */
   --accent-hover: #3d7bf0;
   --ok: #3fb950;
   --warn: #d29922;
   --danger: #f85149;
   --purple: #a371f7;
 
+  /* ── accent 派生 ──────────────────────────────────── */
+  --accent-tint: rgba(79, 140, 255, 0.14); /* 强调徽章底、输入焦点环 */
+  --accent-tint-nav: rgba(79, 140, 255, 0.13); /* 导航与标签的选中底 */
+  --accent-tint-soft: rgba(79, 140, 255, 0.08); /* 信息提示条底 */
+  --accent-tint-role: rgba(79, 140, 255, 0.18); /* 聊天台用户徽标底 */
+  --accent-tint-border: rgba(79, 140, 255, 0.3);
+  --accent-on-active: #cfe0ff; /* 选中态文案 */
+  --accent-on-tint: #7fb0ff; /* 强调徽章前景 */
+  --accent-on-soft: #a8c8ff; /* 信息提示条前景 */
+  --accent-text: #8ab4ff; /* 强调色当文字用（非 tint 底上） */
+
+  /* ── ok 派生 ──────────────────────────────────────── */
+  --ok-tint: rgba(63, 185, 80, 0.14);
+  --ok-tint-soft: rgba(63, 185, 80, 0.09);
+  --ok-tint-border: rgba(63, 185, 80, 0.3);
+  --ok-tint-border-soft: rgba(63, 185, 80, 0.32);
+  --ok-on-tint: #56d364;
+  --ok-on-soft: #7ee787;
+
+  /* ── warn 派生 ────────────────────────────────────── */
+  --warn-tint: rgba(210, 153, 34, 0.14);
+  --warn-tint-soft: rgba(210, 153, 34, 0.09);
+  --warn-tint-border: rgba(210, 153, 34, 0.3);
+  --warn-tint-border-soft: rgba(210, 153, 34, 0.32);
+  --warn-on-tint: #e3b341;
+  --warn-on-soft: #e8c46a;
+
+  /* ── danger 派生 ──────────────────────────────────── */
+  --danger-tint: rgba(248, 81, 73, 0.14);
+  --danger-tint-soft: rgba(248, 81, 73, 0.09);
+  --danger-tint-strong: rgba(248, 81, 73, 0.24); /* 危险按钮悬停底 */
+  --danger-tint-border: rgba(248, 81, 73, 0.3);
+  --danger-tint-border-soft: rgba(248, 81, 73, 0.32);
+  --danger-tint-border-strong: rgba(248, 81, 73, 0.42);
+  --danger-on-tint: #ff7b72;
+  --danger-on-soft: #ffa9a3;
+  --danger-on-strong: #ff9d97;
+
+  /* ── purple 派生 ──────────────────────────────────── */
+  --purple-tint: rgba(163, 113, 247, 0.18);
+  --purple-on-tint: #c39bff;
+
+  /* ── 中性派生（无状态语义的徽章）──────────────────── */
+  --neutral-tint: rgba(152, 160, 179, 0.12);
+  --neutral-tint-border: rgba(152, 160, 179, 0.24);
+
+  /* ── 登录向导步骤条：完成态与进行中态 ─────────────── */
+  /* 这两态的 alpha 比徽章更强，故独立成组；前景复用 ok/accent 的 on-soft 取值。 */
+  --step-done-bg: rgba(63, 185, 80, 0.1);
+  --step-done-border: rgba(63, 185, 80, 0.4);
+  --step-active-bg: rgba(79, 140, 255, 0.11);
+  --step-active-border: rgba(79, 140, 255, 0.45);
+
+  /* ── 遮盖层 ───────────────────────────────────────── */
+  --modal-backdrop: rgba(0, 0, 0, 0.6);
+
   --radius: 10px;
   --radius-sm: 7px;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* 原生控件（滚动条、select 弹层、复选框）随主题渲染。与 index.html 的
+     color-scheme meta 对齐：该 meta 声明「两套都支持、按系统偏好」，若这里不显式
+     声明，浅色系统上就会出现浅色滚动条配深色 UI。 */
+  color-scheme: dark;
+}
+
+/* ── 浅色主题 ─────────────────────────────────────────
+ *
+ * 取值基准是最深深表面（--bg-elev2 = #eef1f6），不是纯白。面板没有一处纯白文字
+ * 背景，仅在最亮表面上达标的取值落到页面底与嵌套面上会跌破 4.5:1。
+ *
+ * 深色下 tint 前景比基色更亮，浅色下必须更暗，所以每个 on-tint 都是独立取值，
+ * 不能由基色推导。
+ *
+ * 深色的 token 一个都不删：深色里 .13/.14/.18、.30/.32 这些 alpha 变体是手调的，
+ * 合并它们会改动深色渲染。浅色改为让各变体取同一个浅色值——一致性在取值层达成，
+ * 不动 token 结构。 */
+
+[data-theme='light'] {
+  /* 基色。注意 --bg-elev 比 --bg 更亮，与深色相反：深色下「抬升」读作更亮，
+     浅色下读作更白，否则卡片看起来是凹进去的。 */
+  --bg: #f6f8fa;
+  --bg-elev: #ffffff;
+  --bg-elev2: #eef1f6;
+  --bg-sunken: #f6f8fa;
+  --bg-hover: #e4e8ef; /* 悬停底。须明显深于常驻的 --bg-elev2，否则按钮悬停无反馈 */
+  --border: #d6dbe4;
+  --border-soft: #e6eaf0;
+  --border-hover: #c2cad6;
+  --row-hover: rgba(0, 0, 0, 0.018); /* 方向与深色相反 */
+  --placeholder: #8b939e; /* 输入提示，非内容文字，不适用 4.5 门槛 */
+  --spinner-track: rgba(0, 0, 0, 0.12); /* 方向与深色相反 */
+  --text: #1c2128; /* 16.2 / 15.2 / 14.3（卡片 / 页面底 / 嵌套面） */
+  --text-dim: #59636e; /* 6.11 / 5.74 / 5.40 */
+  --text-faint: #666e78; /* 5.16 / 4.85 / 4.56 —— 余量最小项之一 */
+
+  /* 状态基色 */
+  --accent: #4f8cff; /* 装饰角色保留亮蓝：品牌渐变、趋势图线、进度条、光标 */
+  --accent-strong: #1d68dc; /* 文字与指示器：5.16 / 4.85 / 4.56 */
+  --accent-hover: #1858c4; /* 兼作主按钮悬停底，白字压其上 6.50:1 */
+  --ok: #197d36; /* 5.21 / 4.90 / 4.60 */
+  --warn: #8f5e00; /* 5.57 / 5.23 / 4.92 */
+  --danger: #cf222e; /* 5.36 / 5.03 / 4.73 */
+  --purple: #804fdc; /* 5.16 / 4.85 / 4.56 —— 余量最小项之一 */
+
+  /* accent 派生：前景 #0f57c0 在 tint 叠三档表面上为 5.98 / 5.64 / 5.31。
+     --accent-text 也用 #0f57c0 而非 #1d68dc：它服务的 .msg-user .msg-role 前景
+     坐在 tint 上，#1d68dc 在那里只有 4.36（页面底）/ 4.11（嵌套面）。 */
+  --accent-tint: rgba(29, 104, 220, 0.08);
+  --accent-tint-nav: rgba(29, 104, 220, 0.08);
+  --accent-tint-soft: rgba(29, 104, 220, 0.08);
+  --accent-tint-role: rgba(29, 104, 220, 0.08);
+  --accent-tint-border: rgba(29, 104, 220, 0.25);
+  --accent-on-active: #0f57c0;
+  --accent-on-tint: #0f57c0;
+  --accent-on-soft: #0f57c0;
+  --accent-text: #0f57c0;
+
+  /* ok 派生：前景在 tint 叠嵌套面上 5.31 */
+  --ok-tint: rgba(25, 125, 54, 0.08);
+  --ok-tint-soft: rgba(25, 125, 54, 0.08);
+  --ok-tint-border: rgba(25, 125, 54, 0.25);
+  --ok-tint-border-soft: rgba(25, 125, 54, 0.25);
+  --ok-on-tint: #0f6b28;
+  --ok-on-soft: #0f6b28;
+
+  /* warn 派生：前景 5.62 */
+  --warn-tint: rgba(143, 94, 0, 0.08);
+  --warn-tint-soft: rgba(143, 94, 0, 0.08);
+  --warn-tint-border: rgba(143, 94, 0, 0.25);
+  --warn-tint-border-soft: rgba(143, 94, 0, 0.25);
+  --warn-on-tint: #7a5000;
+  --warn-on-soft: #7a5000;
+
+  /* danger 派生：前景 6.14 */
+  --danger-tint: rgba(207, 34, 46, 0.08);
+  --danger-tint-soft: rgba(207, 34, 46, 0.08);
+  --danger-tint-strong: rgba(207, 34, 46, 0.15); /* 危险按钮悬停底 */
+  --danger-tint-border: rgba(207, 34, 46, 0.25);
+  --danger-tint-border-soft: rgba(207, 34, 46, 0.25);
+  --danger-tint-border-strong: rgba(207, 34, 46, 0.25);
+  --danger-on-tint: #a40e26;
+  --danger-on-soft: #a40e26;
+  --danger-on-strong: #a40e26;
+
+  /* purple 派生：前景 5.66 */
+  --purple-tint: rgba(128, 79, 220, 0.08);
+  --purple-on-tint: #6a35c8;
+
+  /* 中性派生：前景用 --text-dim，在 tint 叠嵌套面上 4.74 */
+  --neutral-tint: rgba(89, 99, 110, 0.1);
+  --neutral-tint-border: rgba(89, 99, 110, 0.22);
+
+  /* 登录向导步骤条 */
+  --step-done-bg: rgba(25, 125, 54, 0.08);
+  --step-done-border: rgba(25, 125, 54, 0.25);
+  --step-active-bg: rgba(29, 104, 220, 0.08);
+  --step-active-border: rgba(29, 104, 220, 0.25);
+
+  /* 模态遮罩：纯黑压在白底上过重，改用冷调半透明深灰 */
+  --modal-backdrop: rgba(31, 35, 40, 0.5);
+
+  color-scheme: light;
 }
 
 * {
@@ -43,7 +220,7 @@ body {
 }
 
 a {
-  color: var(--accent);
+  color: var(--accent-strong);
   text-decoration: none;
 }
 a:hover {
@@ -87,7 +264,7 @@ a:hover {
   place-items: center;
   font-weight: 700;
   font-size: 13px;
-  color: #fff;
+  color: #fff; /* 主题无关：压在品牌渐变上 */
   flex: 0 0 auto;
 }
 .brand-text strong {
@@ -121,9 +298,9 @@ a:hover {
   text-decoration: none;
 }
 .nav-item.active {
-  background: rgba(79, 140, 255, 0.13);
-  color: #cfe0ff;
-  border-color: rgba(79, 140, 255, 0.3);
+  background: var(--accent-tint-nav);
+  color: var(--accent-on-active);
+  border-color: var(--accent-tint-border);
 }
 .nav-icon {
   width: 17px;
@@ -294,7 +471,7 @@ a:hover {
   color: var(--text-faint);
 }
 .text-accent {
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 
 /* ── 按钮 ───────────────────────────────────────────── */
@@ -315,17 +492,17 @@ a:hover {
   transition: background 0.12s, border-color 0.12s;
 }
 .btn:hover:not(:disabled) {
-  background: #252a37;
-  border-color: #333a4a;
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
 }
 .btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 .btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: #fff; /* 主题无关：压在实色填充上 */
   font-weight: 550;
 }
 .btn-primary:hover:not(:disabled) {
@@ -333,12 +510,12 @@ a:hover {
   border-color: var(--accent-hover);
 }
 .btn-danger {
-  background: rgba(248, 81, 73, 0.14);
-  border-color: rgba(248, 81, 73, 0.42);
-  color: #ff9d97;
+  background: var(--danger-tint);
+  border-color: var(--danger-tint-border-strong);
+  color: var(--danger-on-strong);
 }
 .btn-danger:hover:not(:disabled) {
-  background: rgba(248, 81, 73, 0.24);
+  background: var(--danger-tint-strong);
 }
 .btn-sm {
   padding: 4px 9px;
@@ -381,7 +558,7 @@ textarea {
   padding: 7px 10px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
-  background: #12151d;
+  background: var(--bg-sunken);
   color: var(--text);
   font-size: 13px;
   font-family: inherit;
@@ -397,12 +574,12 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.14);
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 3px var(--accent-tint);
 }
 input::placeholder,
 textarea::placeholder {
-  color: #545b6b;
+  color: var(--placeholder);
 }
 
 .row {
@@ -432,7 +609,7 @@ textarea::placeholder {
 .checkbox input {
   width: auto;
   margin: 0;
-  accent-color: var(--accent);
+  accent-color: var(--accent-strong);
 }
 
 /* ── 表格 ───────────────────────────────────────────── */
@@ -467,7 +644,7 @@ tbody tr:last-child td {
   border-bottom: none;
 }
 tbody tr:hover {
-  background: rgba(255, 255, 255, 0.017);
+  background: var(--row-hover);
 }
 .num {
   font-variant-numeric: tabular-nums;
@@ -493,29 +670,29 @@ tbody tr:hover {
   border: 1px solid transparent;
 }
 .badge-ok {
-  background: rgba(63, 185, 80, 0.14);
-  color: #56d364;
-  border-color: rgba(63, 185, 80, 0.3);
+  background: var(--ok-tint);
+  color: var(--ok-on-tint);
+  border-color: var(--ok-tint-border);
 }
 .badge-warn {
-  background: rgba(210, 153, 34, 0.14);
-  color: #e3b341;
-  border-color: rgba(210, 153, 34, 0.3);
+  background: var(--warn-tint);
+  color: var(--warn-on-tint);
+  border-color: var(--warn-tint-border);
 }
 .badge-danger {
-  background: rgba(248, 81, 73, 0.14);
-  color: #ff7b72;
-  border-color: rgba(248, 81, 73, 0.3);
+  background: var(--danger-tint);
+  color: var(--danger-on-tint);
+  border-color: var(--danger-tint-border);
 }
 .badge-dim {
-  background: rgba(152, 160, 179, 0.12);
+  background: var(--neutral-tint);
   color: var(--text-dim);
-  border-color: rgba(152, 160, 179, 0.24);
+  border-color: var(--neutral-tint-border);
 }
 .badge-accent {
-  background: rgba(79, 140, 255, 0.14);
-  color: #7fb0ff;
-  border-color: rgba(79, 140, 255, 0.3);
+  background: var(--accent-tint);
+  color: var(--accent-on-tint);
+  border-color: var(--accent-tint-border);
 }
 .badge-dot {
   width: 6px;
@@ -538,24 +715,24 @@ tbody tr:hover {
   line-height: 1.6;
 }
 .alert-error {
-  background: rgba(248, 81, 73, 0.09);
-  border-color: rgba(248, 81, 73, 0.32);
-  color: #ffa9a3;
+  background: var(--danger-tint-soft);
+  border-color: var(--danger-tint-border-soft);
+  color: var(--danger-on-soft);
 }
 .alert-warn {
-  background: rgba(210, 153, 34, 0.09);
-  border-color: rgba(210, 153, 34, 0.32);
-  color: #e8c46a;
+  background: var(--warn-tint-soft);
+  border-color: var(--warn-tint-border-soft);
+  color: var(--warn-on-soft);
 }
 .alert-ok {
-  background: rgba(63, 185, 80, 0.09);
-  border-color: rgba(63, 185, 80, 0.32);
-  color: #7ee787;
+  background: var(--ok-tint-soft);
+  border-color: var(--ok-tint-border-soft);
+  color: var(--ok-on-soft);
 }
 .alert-info {
-  background: rgba(79, 140, 255, 0.08);
-  border-color: rgba(79, 140, 255, 0.3);
-  color: #a8c8ff;
+  background: var(--accent-tint-soft);
+  border-color: var(--accent-tint-border);
+  color: var(--accent-on-soft);
 }
 .alert-icon {
   flex: 0 0 auto;
@@ -598,7 +775,7 @@ tbody tr:hover {
   margin: 0 auto 14px;
   font-size: 20px;
   font-weight: 700;
-  color: #fff;
+  color: #fff; /* 主题无关：压在品牌渐变上 */
 }
 
 /* ── 模态框 ─────────────────────────────────────────── */
@@ -606,7 +783,7 @@ tbody tr:hover {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--modal-backdrop);
   display: grid;
   place-items: center;
   padding: 24px;
@@ -656,7 +833,7 @@ tbody tr:hover {
   gap: 14px;
 }
 .chat-log {
-  background: #12151d;
+  background: var(--bg-sunken);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 14px;
@@ -684,12 +861,12 @@ tbody tr:hover {
   color: var(--text-dim);
 }
 .msg-user .msg-role {
-  background: rgba(79, 140, 255, 0.18);
-  color: #8ab4ff;
+  background: var(--accent-tint-role);
+  color: var(--accent-text);
 }
 .msg-assistant .msg-role {
-  background: rgba(163, 113, 247, 0.18);
-  color: #c39bff;
+  background: var(--purple-tint);
+  color: var(--purple-on-tint);
 }
 .msg-body {
   flex: 1;
@@ -746,7 +923,7 @@ tbody tr:hover {
   display: inline-block;
   width: 13px;
   height: 13px;
-  border: 2px solid rgba(255, 255, 255, 0.22);
+  border: 2px solid var(--spinner-track);
   border-top-color: currentColor;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -794,8 +971,8 @@ tbody tr:hover {
   color: var(--text);
 }
 .tab.active {
-  color: #cfe0ff;
-  border-bottom-color: var(--accent);
+  color: var(--accent-on-active);
+  border-bottom-color: var(--accent-strong);
 }
 
 .progress {
@@ -812,7 +989,7 @@ tbody tr:hover {
 }
 
 .muted-box {
-  background: #12151d;
+  background: var(--bg-sunken);
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-sm);
   padding: 11px 13px;
@@ -824,14 +1001,14 @@ tbody tr:hover {
 }
 
 .url-box {
-  background: #12151d;
+  background: var(--bg-sunken);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 11px 13px;
   font-family: var(--mono);
   font-size: 12px;
   word-break: break-all;
-  color: #8ab4ff;
+  color: var(--accent-text);
   line-height: 1.6;
 }
 
