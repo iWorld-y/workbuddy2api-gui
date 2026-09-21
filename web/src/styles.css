@@ -20,6 +20,11 @@
   --radius: 10px;
   --radius-sm: 7px;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* 原生控件（滚动条、select 弹层、复选框）随主题渲染。与 index.html 的
+     color-scheme meta 对齐：该 meta 声明「两套都支持、按系统偏好」，若这里不显式
+     声明，浅色系统上就会出现浅色滚动条配深色 UI。 */
+  color-scheme: dark;
 }
 
 * {
