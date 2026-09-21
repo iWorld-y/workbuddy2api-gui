@@ -49,9 +49,16 @@ services:
     ports:
       - "8787:8787"
     volumes:
-      # 面板自己的配置（可选）：不使用环境变量时，把面板配置放这里。
+      # 面板自己的配置（可选）：上面的 WBGUI_* 已经把每个字段都设好了，默认无需此挂载。
+      #
+      # ⚠️ 不要以「单文件」方式挂载一个可能不存在的文件：宿主机 ./config.json 不存在时，
+      # Docker 不报错，而是自动创建一个同名空目录来满足挂载，容器内 /app/config.json
+      # 就成了目录 → 面板启动即失败（读取配置 /app/config.json: is a directory），
+      # 叠加 restart: unless-stopped 就是无限重启循环。
+      # 真要挂配置文件，先 `cp config.example.json config.json` 建好真实文件再打开下面这行；
+      # 或改为挂载整个目录：`- ./conf:/app/conf` 并加 `command: ["-config", "/app/conf/config.json"]`。
       # 注意不要与网关的 config.json 共用同一路径 —— 两者字段不同。
-      - ./config.json:/app/config.json:ro
+      # - ./config.json:/app/config.json:ro
       # 与网关共享账号目录：面板直接读写网关的 auths/
       # 宿主机路径需按实际部署位置调整（官方默认 /root/workbuddy2api）
       - /root/workbuddy2api/auths:/app/auths
