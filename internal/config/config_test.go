@@ -73,6 +73,27 @@ func TestLoadMissingFile(t *testing.T) {
 	}
 }
 
+// TestConfigPathIsDir Docker 单文件挂载的宿主机源不存在时会被建成空目录，
+// 容器内的 config.json 于是成了目录。这类部署错误必须被明确拒绝并指出成因，
+// 而不是抛一句 "is a directory" 让人对着重启循环猜（真实踩过的坑）。
+func TestConfigPathIsDir(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.json")
+	if err := os.Mkdir(path, 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := Load(path)
+	if err == nil {
+		t.Fatal("配置路径是目录时应报错，但成功加载了")
+	}
+	// 错误信息要给出可操作的指引，而不只是"读取失败"。
+	for _, want := range []string{"目录", "docker-compose", "WBGUI_"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("错误信息缺少关键指引 %q: %v", want, err)
+		}
+	}
+}
+
 // TestRejectGatewayConfig 关键防呆：把网关 config.json 当面板配置加载必须被拒绝，
 // 否则面板会静默监听到网关端口、并用错凭证目录（真实踩过的坑）。
 func TestRejectGatewayConfig(t *testing.T) {

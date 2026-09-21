@@ -287,6 +287,13 @@ cd web && npx tsc -b
 5. **面板写的凭证网关读不到** —— 面板 root 写 `root:0600`，网关以 uid 10001 读，权限拒绝导致
    「账号已添加但池中未加载」，且**重启网关也无效**（每次扫描都跳过同一个文件）。
    现在用 `auth_owner_uid` / `auth_owner_gid` 让面板落盘后自动 chown，并在 UI 直接给出诊断。
+6. **单文件挂载的源文件不存在 → 被建成目录 → 启动失败** —— compose 里写
+   `- ./config.json:/app/config.json` 而宿主机上 `./config.json` 并不存在时，Docker **不报错**，
+   而是自动创建一个同名空目录来满足挂载；容器内 `/app/config.json` 于是成了目录，面板读配置
+   报 `读取配置 /app/config.json: read /app/config.json: is a directory` 直接退出，
+   叠加 `restart: unless-stopped` 表现为一轮轮重启（且退避间隔递增，很像"偶发崩溃"）。
+   现在默认 compose **不再挂载**面板配置文件（`WBGUI_*` 已覆盖全部字段，挂它本就是可选项），
+   服务端遇到"配置路径是目录"也会给出成因与处理方式，而不是裸抛 `is a directory`。
 
 ## ❓ 常见问题
 

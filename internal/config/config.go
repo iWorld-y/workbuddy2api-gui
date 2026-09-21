@@ -142,6 +142,23 @@ func detectDeployDir() string {
 func Load(path string) (*Config, error) {
 	c := Default()
 	if path != "" {
+		// 防呆：配置路径是个目录。最常见成因是 Docker 单文件挂载 —— compose 里写了
+		// `- ./config.json:/app/config.json`，而宿主机上该文件并不存在时，Docker 不会报错，
+		// 而是自动创建一个同名空目录来满足挂载，于是容器内读到的 config.json 就是目录。
+		// 这里必须点明成因：否则只剩晦涩的 "is a directory"，配合 restart: unless-stopped
+		// 表现为一轮轮重启，日志里看不出该删哪个目录。
+		if st, err := os.Stat(path); err == nil && st.IsDir() {
+			return nil, fmt.Errorf(
+				"配置路径 %s 是一个目录，不是文件。\n"+
+					"最常见的原因：docker-compose 把宿主机上并不存在的配置文件以单文件方式挂载"+
+					"（如 `- ./config.json:/app/config.json`）——\n"+
+					"Docker 不会报错，而是自动创建一个同名空目录来满足挂载，容器内的 config.json 就成了目录。\n"+
+					"处理方式二选一：\n"+
+					"  · 删掉这个空目录，并按 config.example.json 建一份真实的配置文件\n"+
+					"  · 配置全部走 WBGUI_* 环境变量，并从 compose 里去掉这条挂载",
+				path,
+			)
+		}
 		raw, err := os.ReadFile(path)
 		switch {
 		case err == nil:
