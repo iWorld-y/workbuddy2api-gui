@@ -6,6 +6,7 @@ import type {
   ChatMessage,
   ConfigResponse,
   Credits,
+  LogsResponse,
   ModelsResponse,
   OpResult,
   Overview,
@@ -139,6 +140,25 @@ export const api = {
     return get<StatsResponse>(`/api/stats${qs ? `?${qs}` : ''}`)
   },
   resetStats: () => post<{ ok: boolean; message: string }>('/api/stats/reset'),
+  // 请求明细（逐请求 token / 首字 / 耗时 / 扣费），游标分页
+  logs: (opt?: {
+    limit?: number
+    before?: number
+    model?: string
+    only?: 'success' | 'failed'
+    since?: string
+    until?: string
+  }) => {
+    const q = new URLSearchParams()
+    if (opt?.limit) q.set('limit', String(opt.limit))
+    if (opt?.before) q.set('before', String(opt.before))
+    if (opt?.model) q.set('model', opt.model)
+    if (opt?.only) q.set('only', opt.only)
+    if (opt?.since) q.set('since', opt.since)
+    if (opt?.until) q.set('until', opt.until)
+    const qs = q.toString()
+    return get<LogsResponse>(`/api/logs${qs ? `?${qs}` : ''}`)
+  },
   // 官方价格表编辑
   savePrice: (p: {
     model: string
